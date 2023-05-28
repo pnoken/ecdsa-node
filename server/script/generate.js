@@ -1,28 +1,26 @@
-const { keccak256 } = require("ethereum-cryptography/keccak");
-const { toHex, utf8ToBytes } = require("ethereum-cryptography/utils");
-const secp = require("ethereum-cryptography/secp256k1");
+const { utils, getPublicKey } = require('ethereum-cryptography/secp256k1');
+const { toHex } = require('ethereum-cryptography/utils');
+const fs = require('fs');
+const generateAddress = (limit) => {
+  let address = {};
+  for (let index = 0; index < limit; index++) {
+    const privateKey = utils.randomPrivateKey();
+    const publicKey = getPublicKey(privateKey);
+    const walletAddress = toHex(publicKey.slice(1).slice(-20));
+    console.log(`public key  : ${toHex(publicKey)}`);
+    console.log(`private key : ${toHex(privateKey)}`);
+    console.log(`address     : ${walletAddress}\n`);
+    address[walletAddress] = Math.floor(Math.random() * 100);
+  }
+  return address;
+};
 
-const privateKey = secp.utils.randomPrivateKey();
-
-console.log("private key", toHex(privateKey));
-
-const publicKey = secp.getPublicKey(privateKey);
-
-const signature = await secp.sign(messageHash, privateKey);
-
-const isSigned = secp.verify(signature, messageHash, publicKey);
-
-console.log("pub address", toHex(getAddress(publicKey)));
-
-
-const a = [1, 2];
-
-a[0] = 10;
-a[2] = 20;
-
-console.log('a', a)
-function getAddress(publicKey) {
-    // the first byte indicates whether this is in compressed form or not
-    return keccak256(publicKey.slice(1)).slice(-20);
+async function storeAddressInFile() {
+  fs.writeFileSync(
+    '../../address.json',
+    JSON.stringify(generateAddress(3)),
+    'utf-8'
+  );
 }
 
+storeAddressInFile();
